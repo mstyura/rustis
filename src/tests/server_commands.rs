@@ -1153,3 +1153,23 @@ async fn time() -> Result<()> {
 
     Ok(())
 }
+
+
+#[cfg_attr(feature = "tokio-runtime", tokio::test)]
+#[cfg_attr(feature = "async-std-runtime", async_std::test)]
+#[serial]
+async fn flushall_erases_key() -> Result<()> {
+    let client = get_test_client().await?;
+
+    client.set("key", "value").await?;
+
+    let val: Option<String>= client.get("key").await?;
+    assert_eq!(val, Some("value".to_owned()));
+
+    client.flushall(FlushingMode::Sync).await?;
+
+    let val: Option<String>= client.get("key").await?;
+    assert_eq!(val, None);
+
+    Ok(())
+}
